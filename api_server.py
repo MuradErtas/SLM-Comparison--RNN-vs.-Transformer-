@@ -5,6 +5,7 @@ FastAPI server for SLM model inference.
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from contextlib import asynccontextmanager
 import sys
 import os
 
@@ -13,7 +14,32 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from slm import load_models, generate_response
 
-app = FastAPI(title="SLM API", version="1.0.0")
+# Global model storage
+transformer = None
+rnn = None
+tokenizer = None
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Load models on startup, cleanup on shutdown."""
+    global transformer, rnn, tokenizer
+    
+    # Startup
+    models_path = os.path.join(os.path.dirname(__file__), "models")
+    
+    if not os.path.exists(models_path):
+        raise RuntimeError(f"Models directory not found: {models_path}")
+    
+    print(f"Loading models from {models_path}...", file=sys.stderr)
+    transformer, rnn, tokenizer = load_models(models_path)
+    print("Models loaded successfully!", file=sys.stderr)
+    
+    yield
+    
+    # Shutdown (cleanup if needed)
+    # Models will be cleaned up automatically when process ends
+
+app = FastAPI(title="SLM API", version="1.0.0", lifespan=lifespan)
 
 # CORS configuration - allow Next.js frontend
 app.add_middleware(
@@ -27,28 +53,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Global model storage
-transformer = None
-rnn = None
-tokenizer = None
-
 class GenerateRequest(BaseModel):
     prompt: str
     max_tokens: int = 150
-
-@app.on_event("startup")
-async def load_models_on_startup():
-    """Load models once when server starts."""
-    global transformer, rnn, tokenizer
-    
-    models_path = os.path.join(os.path.dirname(__file__), "models")
-    
-    if not os.path.exists(models_path):
-        raise RuntimeError(f"Models directory not found: {models_path}")
-    
-    print(f"Loading models from {models_path}...", file=sys.stderr)
-    transformer, rnn, tokenizer = load_models(models_path)
-    print("Models loaded successfully!", file=sys.stderr)
 
 @app.get("/")
 async def root():

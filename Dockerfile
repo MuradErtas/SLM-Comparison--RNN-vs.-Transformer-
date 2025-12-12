@@ -17,6 +17,7 @@ RUN pip install --no-cache-dir \
 
 # Install other dependencies
 RUN pip install --no-cache-dir \
+    numpy>=1.24.0 \
     bpeasy>=0.1.0 \
     fastapi>=0.104.0 \
     uvicorn[standard]>=0.24.0 \

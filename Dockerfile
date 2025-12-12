@@ -26,8 +26,9 @@ RUN pip install --no-cache-dir \
 # Copy application code
 COPY . .
 
-# Expose port
+# Expose port (Railway uses PORT env var, defaults to 8000)
 EXPOSE 8000
 
 # Run the API server
+# Railway sets PORT automatically, api_server.py reads it from env
 CMD ["python", "api_server.py"]

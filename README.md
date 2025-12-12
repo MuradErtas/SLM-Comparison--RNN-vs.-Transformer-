@@ -7,6 +7,7 @@ A PyTorch implementation comparing Transformer and RNN (LSTM) architectures for 
 - **BPE Tokenization**: Byte Pair Encoding for efficient subword-level tokenization
 - **Dual Architecture**: Implements both Transformer and RNN (LSTM) models
 - **Interactive GUI**: ChatGPT-like interface to compare model responses side-by-side
+- **REST API Server**: FastAPI server for model inference, suitable for deployment on PaaS platforms
 - **Model Persistence**: Save and load trained models for later use
 - **Professional Code**: Well-documented, type-hinted, production-ready code
 
@@ -16,6 +17,7 @@ A PyTorch implementation comparing Transformer and RNN (LSTM) architectures for 
 .
 ├── slm.py              # Main training script and model definitions
 ├── slm_gui.py          # Interactive GUI application
+├── api_server.py       # FastAPI REST API server for model inference
 ├── input.txt           # Training data (text corpus)
 ├── models/             # Saved models directory (created after training)
 │   ├── transformer.pt
@@ -60,6 +62,20 @@ The GUI allows you to:
 - Compare Transformer vs RNN responses side-by-side
 - See real-time generation from both architectures
 
+### 4. Run API Server
+
+Start the FastAPI server for REST API access:
+
+```bash
+python api_server.py
+```
+
+The server will:
+- Load models on startup
+- Start on `http://0.0.0.0:8000` (or port specified by `PORT` environment variable)
+- Provide REST endpoints for model inference
+- Support CORS for frontend integration
+
 ## Usage
 
 ### Training Script (`slm.py`)
@@ -85,6 +101,46 @@ python slm_gui.py
 - Side-by-side comparison of model outputs
 - Real-time generation
 - Status indicators
+
+### API Server (`api_server.py`)
+
+```bash
+python api_server.py
+```
+
+**Features:**
+- FastAPI REST API server
+- Health check endpoints
+- Model inference endpoint
+- CORS support for frontend integration
+- Suitable for PaaS deployment (e.g., Railway, Render, Fly.io)
+
+**API Endpoints:**
+
+- `GET /` - Health check endpoint
+- `GET /health` - Health check with model status
+- `POST /generate` - Generate responses from both models
+
+**Example Request:**
+
+```bash
+curl -X POST "http://localhost:8000/generate" \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "The future of AI", "max_tokens": 150}'
+```
+
+**Example Response:**
+
+```json
+{
+  "transformer": "The future of AI is bright...",
+  "rnn": "The future of AI will be..."
+}
+```
+
+**Environment Variables:**
+- `PORT` - Server port (default: 8000)
+- `ALLOWED_ORIGIN` - CORS allowed origins (default: "*", or comma-separated list)
 
 ## Model Architectures
 
@@ -116,7 +172,16 @@ Default configuration (can be modified in `slm.py`):
 - Python 3.7+
 - PyTorch
 - bpeasy
-- tkinter (usually included with Python)
+- FastAPI
+- uvicorn
+- pydantic
+- tkinter (usually included with Python, for GUI only)
+
+Install all dependencies:
+
+```bash
+pip install -r requirements.txt
+```
 
 ## Notes
 

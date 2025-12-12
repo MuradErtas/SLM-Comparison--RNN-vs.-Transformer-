@@ -1,6 +1,5 @@
 """
 FastAPI server for SLM model inference.
-Deploy this separately on Railway, Render, Fly.io, etc.
 """
 
 from fastapi import FastAPI, HTTPException
